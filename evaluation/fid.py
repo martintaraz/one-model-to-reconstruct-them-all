@@ -26,12 +26,11 @@ class FIDStatistics:
 
 class FID:
 
-    def __init__(self, num_samples: int = 1000, dim: int = 2048, device: str = 'cpu'):
+    def __init__(self, num_samples: int = 1000, dim: int = 2048, device: str = 'cuda'):
         self.num_samples = num_samples
         self.inception_dim = dim
         self.block_index = pytorch_fid.inception.InceptionV3.BLOCK_INDEX_BY_DIM[dim]
-        print(f"FID was called with device={device}. Overwriting with CPU anyways")
-        self.device = "cpu"
+        self.device = device
 
         self.model = pytorch_fid.inception.InceptionV3([self.block_index])
         self.model.eval()

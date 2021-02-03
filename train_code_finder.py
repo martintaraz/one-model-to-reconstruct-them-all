@@ -221,7 +221,7 @@ if __name__ == "__main__":
     parser.add_argument("--superresolution", action='store_true', default=False, help="Train autoencoder for superresolution")
     parser.add_argument("--denoising", action='store_true', default=False, help="Train autoencoder for image denoising")
     parser.add_argument("--black-and-white-denoising", action='store_true', default=False, help="Train autoencoder for black and white denoising")
-    parser.add_argument(" --neural_rendering", action='store_true', default=False, help="Train autoencoder for black and white denoising")
+    parser.add_argument("--neural-rendering", action='store_true', default=False, help="Train for TeVE")
 
     args = parser.parse_args()
     args.log_dir = os.path.join('logs', args.log_dir, args.log_name, datetime.datetime.now().isoformat())
