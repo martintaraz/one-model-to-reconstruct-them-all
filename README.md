@@ -18,7 +18,7 @@
 
 9. run the training using `python train_code_finder.py configs/autoencoder.yaml /models/stylegan1/ffhq.model --images /data/train.json  -s 1 --neural_rendering`
 
-# dif against the original repo
+# diff against the original repo
 
 remove the support for StyleGAN2 to re allow training without gpu
 
