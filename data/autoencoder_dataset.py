@@ -35,7 +35,28 @@ class AutoencoderDataset(JSONDataset):
             'output_image': image
         }
 
+class NeuralRenderingDataset(AutoencoderDataset):
+    def get_noised_image(self, path_without_noise: str):
+        path_with_noise = path_without_noise.replace("dataset", "dataset2")
+        return self.loader(path_with_noise)
 
+
+    def __getitem__(self, index: int) -> Dict[str, numpy.ndarray]:
+        path = self.image_data[index]
+        if self.root is not None:
+            path = os.path.join(self.root, path)
+
+        image = self.loader(path)
+        augmented_image = self.get_noised_image(image)
+
+        if self.transforms is not None:
+            image = self.transforms(image)
+            augmented_image = self.transforms(augmented_image)
+
+        return {
+            'input_image': augmented_image,
+            'output_image': image
+        }
 class DenoisingAutoencoderDataset(AutoencoderDataset):
 
     def __init__(self, *args, **kwargs):

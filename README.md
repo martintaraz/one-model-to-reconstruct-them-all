@@ -1,3 +1,28 @@
+# Setup for Neural Rendering
+
+1. install as described below for venv interpreter
+
+2. `pip install gdown`
+
+3. `gdown --id 1QlXFPIOFzsJyjZ1AtfpnVhqW4Z0r8GLZ`
+
+4. `mkdir dataset`
+   
+5. place your *clean* images = frames from the video into the `dataset` folder
+
+6. `python utils/folder_to_json.py dataset`
+
+7. `mkdir dataset2`
+
+8. place your ugly images into the `dataset2` folder
+
+9. run the training using `python train_code_finder.py configs/autoencoder.yaml /models/stylegan1/ffhq.model --images /data/train.json  -s 1 --neural_rendering`
+
+# dif against the original repo
+
+remove the support for StyleGAN2 to re allow training without gpu
+
+
 # One Model to Reconstruct them All
 
 This repository contains the code for our Paper "One Model to Reconstruct Them All: A Novel Way to Use the Stochastic Noise in StyleGAN".

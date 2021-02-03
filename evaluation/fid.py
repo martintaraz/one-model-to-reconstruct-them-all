@@ -26,11 +26,12 @@ class FIDStatistics:
 
 class FID:
 
-    def __init__(self, num_samples: int = 1000, dim: int = 2048, device: str = 'cuda'):
+    def __init__(self, num_samples: int = 1000, dim: int = 2048, device: str = 'cpu'):
         self.num_samples = num_samples
         self.inception_dim = dim
         self.block_index = pytorch_fid.inception.InceptionV3.BLOCK_INDEX_BY_DIM[dim]
-        self.device = device
+        print(f"FID was called with device={device}. Overwriting with CPU anyways")
+        self.device = "cpu"
 
         self.model = pytorch_fid.inception.InceptionV3([self.block_index])
         self.model.eval()
@@ -46,6 +47,9 @@ class FID:
     def __call__(self, model: StyleganAutoencoder, data_loader: DataLoader, dataset_path: Union[str, Path] = None) -> float:
         with self.init_inception_model():
             real_statistics, fake_statistics = self.calculate_statistics(model, data_loader, dataset_path)
+
+        print(real_statistics)
+        print(fake_statistics)
 
         fid_score = pytorch_fid.fid_score.calculate_frechet_distance(
             real_statistics.mu,
