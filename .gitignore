@@ -8,3 +8,6 @@ logs/
 *.npz
 wandb
 *.model
+
+dataset/*
+dataset2/*

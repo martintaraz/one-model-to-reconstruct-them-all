@@ -26,8 +26,12 @@ def main(args):
     image = next(iter(data_loader))
     image = {k: v.to(args.device) for k,v in image.items()}
 
-    reconstructed = Image.fromarray(make_image(autoencoder(image['input_image'])[0].squeeze(0)))
 
+    reconstructed = Image.fromarray(make_image(autoencoder(image['input_image'])[0].squeeze(0)))
+    # rescale the image to the original dimensions
+    _input_image = Image.open(input_image)
+    reconstructed= reconstructed.resize(_input_image.size, resample = Image.BICUBIC)
+    print(f"scaled to {_input_image.size}")
     output_name = Path(args.output_dir) / f"reconstructed_{input_image.stem}_stylegan_{config['stylegan_variant']}_{'w_only' if config['w_only'] else 'w_plus'}.png"
     reconstructed.save(output_name)
 
@@ -39,7 +43,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("autoencoder_checkpoint", help='Path to autoencoder checkpoint which shall be used for embedding')
     parser.add_argument("image", help="image to reconstruct")
-    parser.add_argument("--device", default='cuda', help="which device to use (cuda, or cpu)")
+    parser.add_argument("--device", default='cpu', help="which device to use (cuda, or cpu)")
     parser.add_argument("--output-dir", default='.')
 
     main(parser.parse_args())
