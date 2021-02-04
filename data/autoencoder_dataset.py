@@ -47,7 +47,7 @@ class NeuralRenderingDataset(AutoencoderDataset):
             path = os.path.join(self.root, path)
 
         image = self.loader(path)
-        augmented_image = self.get_noised_image(image)
+        augmented_image = self.get_noised_image(path)
 
         if self.transforms is not None:
             image = self.transforms(image)

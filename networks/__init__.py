@@ -19,7 +19,7 @@ from utils.convert_autoencoder_checkpoint import convert_autoencoder_checkpoint
 
 
 def load_weights(network: nn.Module, model_file: Union[str, Path], *, key: str = None, strict: bool = True, convert: bool = False) -> nn.Module:
-    weights = torch.load(model_file)
+    weights = torch.load(model_file, map_location=torch.device('cpu'))
     if convert:
         weights = convert_autoencoder_checkpoint(weights)
     if key is not None and key in weights:
@@ -362,8 +362,8 @@ def get_autoencoder(config: dict, init_ckpt: str = None) -> Union[StyleganAutoen
 
     if config['stylegan_variant'] == 1:
         autoencoder_func = get_stylegan_1_based_autoencoder(argparse.Namespace(**config))
-    else:
-        autoencoder_func = get_stylegan_2_based_autoencoder(argparse.Namespace(**config))
+    #else:
+    #    autoencoder_func = get_stylegan_2_based_autoencoder(argparse.Namespace(**config))
 
     autoencoder = autoencoder_func(
         config['image_size'],

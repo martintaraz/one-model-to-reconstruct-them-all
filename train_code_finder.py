@@ -15,10 +15,11 @@ from evaluation.autoencoder_evaluation import AutoEncoderEvalFunc
 from extensions.fid_score import FIDScore
 from networks import load_weights, get_autoencoder
 from networks.stylegan1.model import Discriminator as Stylegan1Discriminator
-from networks.stylegan2.model import Discriminator as Stylegan2Discriminator
+
+#from networks.stylegan2.model import Discriminator as Stylegan2Discriminator
 from pytorch_training.distributed import get_rank, get_world_size, synchronize
 from pytorch_training.extensions import ImagePlotter, Snapshotter, Evaluator
-from pytorch_training.extensions.logger import WandBLogger
+from pytorch_training.extensions.logger import TensorboardLogger
 from pytorch_training.extensions.lr_scheduler import LRScheduler
 from pytorch_training.optimizer import GradientClipAdam
 from pytorch_training.trainer import DistributedTrainer
@@ -37,12 +38,12 @@ def merge_config_and_args(config: dict, args: argparse.Namespace) -> dict:
     return config
 
 
-def get_discriminator(config: dict) -> Union[Stylegan1Discriminator, Stylegan2Discriminator]:
+def get_discriminator(config: dict) ->Stylegan1Discriminator:# Union[Stylegan1Discriminator, Stylegan2Discriminator]:
     if config['stylegan_variant'] == 1:
         discriminator = Stylegan1Discriminator(from_rgb_activate=True)
         discriminator.forward = functools.partial(discriminator.forward, step=int(math.log2(config['image_size'])) - 2, alpha=0)
-    else:
-        discriminator = Stylegan2Discriminator(config['image_size'])
+    #else:
+    #    discriminator = Stylegan2Discriminator(config['image_size'])
     return discriminator
 
 
@@ -86,13 +87,13 @@ def main(args, rank, world_size):
 
     if world_size > 1:
         distributed = functools.partial(DDP, device_ids=[rank], find_unused_parameters=True, broadcast_buffers=False, output_device=rank)
-        autoencoder = distributed(autoencoder.to('cuda'))
+        autoencoder = distributed(autoencoder.to('cpu'))
         if discriminator is not None:
-            discriminator = distributed(discriminator.to('cuda'))
+            discriminator = distributed(discriminator.to('cpu'))
     else:
-        autoencoder = autoencoder.to('cuda')
+        autoencoder = autoencoder.to('cpu')
         if discriminator is not None:
-            discriminator = discriminator.to('cuda')
+            discriminator = discriminator.to('cpu')
 
     if discriminator is not None:
         discriminator_optimizer = GradientClipAdam(discriminator.parameters(), **optimizer_opts)
@@ -100,7 +101,7 @@ def main(args, rank, world_size):
             iterators={'images': train_data_loader},
             networks={'autoencoder': autoencoder, 'discriminator': discriminator},
             optimizers={'main': optimizer, 'discriminator': discriminator_optimizer},
-            device='cuda',
+            device='cpu',
             copy_to_device=world_size == 1,
             disable_update_for=args.disable_update_for,
         )
@@ -109,7 +110,7 @@ def main(args, rank, world_size):
             iterators={'images': train_data_loader},
             networks={'autoencoder': autoencoder},
             optimizers={'main': optimizer},
-            device='cuda',
+            device='cpu',
             copy_to_device=world_size == 1,
             disable_update_for=args.disable_update_for,
         )
@@ -119,36 +120,18 @@ def main(args, rank, world_size):
         stop_trigger=get_trigger((config['max_iter'], 'iteration'))
     )
 
-    logger = WandBLogger(
+    print("creating logger")
+
+    logger = TensorboardLogger(
         args.log_dir,
         args,
         config,
         os.path.dirname(os.path.realpath(__file__)),
         trigger=get_trigger((config['log_iter'], 'iteration')),
-        master=rank == 0,
-        project_name="One Model to Generate them All",
-        run_name=args.log_name,
+        master=rank == 0
     )
 
-    if args.val_images is not None:
-        val_data_loader = build_data_loader(args.val_images, config, args.absolute, shuffle_off=True, dataset_class=dataset_class)
-
-        evaluator = Evaluator(
-            val_data_loader,
-            logger,
-            AutoEncoderEvalFunc(autoencoder, rank),
-            rank,
-            trigger=get_trigger((1, 'epoch'))
-        )
-        trainer.extend(evaluator)
-
-    fid_extension = FIDScore(
-        autoencoder if not isinstance(autoencoder, DDP) else autoencoder.module,
-        val_data_loader if args.val_images is not None else train_data_loader,
-        dataset_path=args.val_images if args.val_images is not None else args.images,
-        trigger=(1, 'epoch')
-    )
-    trainer.extend(fid_extension)
+    print("creating snapshotter")
 
     if rank == 0:
         snapshot_autoencoder = autoencoder if not isinstance(autoencoder, DDP) else autoencoder.module
@@ -164,37 +147,18 @@ def main(args, rank, world_size):
         )
         trainer.extend(snapshotter)
 
-        plot_images = []
-        if args.val_images is not None:
-            def fill_plot_images(data_loader):
-                image_list = []
-                num_images = 0
-                for batch in data_loader:
-                    for image in batch['input_image']:
-                        image_list.append(image)
-                        num_images += 1
-                        if num_images > config['display_size']:
-                            return image_list
-                raise RuntimeError(f"Could not gather enough plot images for display size {config['display_size']}.")
-
-            plot_images = fill_plot_images(val_data_loader)
-        else:
-            for i in range(config['display_size']):
-                if hasattr(train_data_loader.sampler, 'set_epoch'):
-                    train_data_loader.sampler.set_epoch(i)
-                plot_images.append(next(iter(train_data_loader))['input_image'][0])
-        image_plotter = ImagePlotter(plot_images, [autoencoder], args.log_dir, trigger=get_trigger((config['image_save_iter'], 'iteration')), plot_to_logger=True)
-        trainer.extend(image_plotter)
-
+    print("creating scheduler")
     schedulers = {
         "encoder": CosineAnnealingLR(optimizer, config["max_iter"], eta_min=1e-8)
     }
     lr_scheduler = LRScheduler(schedulers, trigger=get_trigger((1, 'iteration')))
     trainer.extend(lr_scheduler)
 
+    print("finishing it up")
     trainer.extend(logger)
 
     synchronize()
+    print("start to train")
     trainer.train()
 
 

@@ -8,7 +8,7 @@ log_iter: 10                  # How often do you want to log the training stats
 #validation_iter: 2   # --> if you want to do evaluation in a fixed interval and not every epoch
 
 # optimization options
-max_iter: 1              # maximum number of training iterations
+max_iter: 1000              # maximum number of training iterations
 batch_size: 4                 # batch size
 weight_decay: 0.0001          # weight decay
 beta1: 0.5                    # Adam parameter
