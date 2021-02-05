@@ -194,10 +194,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args.log_dir = os.path.join('logs', args.log_dir, args.log_name, datetime.datetime.now().isoformat())
 
-    if torch.cuda.device_count() > 1 and args["gpu"]:
-        multiprocessing.set_start_method('forkserver')
-        torch.cuda.set_device(args.local_rank)
-        torch.distributed.init_process_group(backend=args.mpi_backend, init_method='env://')
-        synchronize()
-
     main(args, get_rank(), get_world_size())
