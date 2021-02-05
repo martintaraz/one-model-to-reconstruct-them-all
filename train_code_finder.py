@@ -48,6 +48,9 @@ def get_discriminator(config: dict) ->Stylegan1Discriminator:# Union[Stylegan1Di
 
 
 def main(args, rank, world_size):
+    device = "cuda" if args["gpu"] else "cpu"
+    print(f"Training uses {device}")
+
     config = load_yaml_config(args.config)
     config = merge_config_and_args(config, args)
 
@@ -87,13 +90,13 @@ def main(args, rank, world_size):
 
     if world_size > 1:
         distributed = functools.partial(DDP, device_ids=[rank], find_unused_parameters=True, broadcast_buffers=False, output_device=rank)
-        autoencoder = distributed(autoencoder.to('cpu'))
+        autoencoder = distributed(autoencoder.to(device))
         if discriminator is not None:
-            discriminator = distributed(discriminator.to('cpu'))
+            discriminator = distributed(discriminator.to(device))
     else:
-        autoencoder = autoencoder.to('cpu')
+        autoencoder = autoencoder.to(device)
         if discriminator is not None:
-            discriminator = discriminator.to('cpu')
+            discriminator = discriminator.to(device)
 
     if discriminator is not None:
         discriminator_optimizer = GradientClipAdam(discriminator.parameters(), **optimizer_opts)
@@ -101,7 +104,7 @@ def main(args, rank, world_size):
             iterators={'images': train_data_loader},
             networks={'autoencoder': autoencoder, 'discriminator': discriminator},
             optimizers={'main': optimizer, 'discriminator': discriminator_optimizer},
-            device='cpu',
+            device=device,
             copy_to_device=world_size == 1,
             disable_update_for=args.disable_update_for,
         )
@@ -110,7 +113,7 @@ def main(args, rank, world_size):
             iterators={'images': train_data_loader},
             networks={'autoencoder': autoencoder},
             optimizers={'main': optimizer},
-            device='cpu',
+            device=device,
             copy_to_device=world_size == 1,
             disable_update_for=args.disable_update_for,
         )
@@ -186,11 +189,12 @@ if __name__ == "__main__":
     parser.add_argument("--denoising", action='store_true', default=False, help="Train autoencoder for image denoising")
     parser.add_argument("--black-and-white-denoising", action='store_true', default=False, help="Train autoencoder for black and white denoising")
     parser.add_argument("--neural-rendering", action='store_true', default=False, help="Train for TeVE")
+    parser.add_argument("--gpu", action="store_true", default=False, help="Use GPU for training")
 
     args = parser.parse_args()
     args.log_dir = os.path.join('logs', args.log_dir, args.log_name, datetime.datetime.now().isoformat())
 
-    if torch.cuda.device_count() > 1:
+    if torch.cuda.device_count() and args["gpu"] > 1:
         multiprocessing.set_start_method('forkserver')
         torch.cuda.set_device(args.local_rank)
         torch.distributed.init_process_group(backend=args.mpi_backend, init_method='env://')
