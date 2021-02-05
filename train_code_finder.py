@@ -116,6 +116,7 @@ def main(args, rank, world_size):
             device=device,
             copy_to_device=world_size == 1,
             disable_update_for=args.disable_update_for,
+            use_gpu=args.gpu
         )
 
     trainer = DistributedTrainer(
