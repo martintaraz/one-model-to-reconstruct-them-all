@@ -48,7 +48,7 @@ def get_discriminator(config: dict) ->Stylegan1Discriminator:# Union[Stylegan1Di
 
 
 def main(args, rank, world_size):
-    device = "cuda" if args["gpu"] else "cpu"
+    device = "cuda" if args.gpu else "cpu"
     print(f"Training uses {device}")
 
     config = load_yaml_config(args.config)
