@@ -11,3 +11,7 @@ wandb
 
 dataset/*
 dataset2/*
+*.png
+*.avi
+*.zip
+*.pt
