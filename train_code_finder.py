@@ -135,6 +135,29 @@ def main(args, rank, world_size):
         master=rank == 0
     )
 
+    print("creating validator")
+    if args.val_images is not None:
+        val_data_loader = build_data_loader(args.val_images, config, args.absolute, shuffle_off=True,
+                                            dataset_class=dataset_class)
+
+        evaluator = Evaluator(
+            val_data_loader,
+            logger,
+            AutoEncoderEvalFunc(autoencoder, rank, use_gpu=False),
+            device = device if device != "cuda" else rank,
+            trigger=get_trigger((1, 'epoch'))
+        )
+        trainer.extend(evaluator)
+
+    fid_extension = FIDScore(
+        autoencoder if not isinstance(autoencoder, DDP) else autoencoder.module,
+        val_data_loader if args.val_images is not None else train_data_loader,
+        dataset_path=args.val_images if args.val_images is not None else args.images,
+        trigger=(1, 'epoch'),
+        device=device
+    )
+    trainer.extend(fid_extension)
+
     print("creating snapshotter")
 
     if rank == 0:

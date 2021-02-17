@@ -10,9 +10,9 @@ from pytorch_training.reporter import get_current_reporter
 
 class AutoEncoderEvalFunc:
 
-    def __init__(self, autoencoder: StyleganAutoencoder, device: int, use_perceptual_loss: bool = True):
+    def __init__(self, autoencoder: StyleganAutoencoder, device: int, use_perceptual_loss: bool = True, use_gpu: bool=True):
         self.autoencoder = autoencoder
-        self.perceptual_loss = PerceptualLoss(model='net-lin', net='vgg', use_gpu=True, gpu_ids=[device])
+        self.perceptual_loss = PerceptualLoss(model='net-lin', net='vgg', use_gpu=use_gpu, gpu_ids=[device])
         self.use_perceptual_loss = use_perceptual_loss
 
     def __call__(self, batch):
