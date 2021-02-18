@@ -13,7 +13,7 @@ class AutoencoderUpdater(Updater):
 
     def __init__(self, *args, use_perceptual_loss: bool = True, disable_update_for: str = 'none', use_gpu :bool = False , **kwargs):
         super().__init__(*args, **kwargs)
-        self.perceptual_loss = PerceptualLoss(model='net-lin', net='vgg', use_gpu=use_gpu, gpu_ids=[self.device])
+        self.perceptual_loss = PerceptualLoss(model='net-lin', net='vgg', use_gpu=self.device == "cuda", gpu_ids=[self.device])
         self.use_perceptual_loss = use_perceptual_loss
         self.disable_update(disable_update_for)
 
