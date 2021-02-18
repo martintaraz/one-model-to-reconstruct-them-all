@@ -100,6 +100,9 @@ class ScalingLayer(nn.Module):
         self.register_buffer('scale', torch.Tensor([.458,.448,.450]).to(device)[None,:,None,None])
 
     def forward(self, inp):
+        print(inp.device)
+        print(self.shift.device)
+        print(self.scale.device)
         return (inp - self.shift) / self.scale
 
 
