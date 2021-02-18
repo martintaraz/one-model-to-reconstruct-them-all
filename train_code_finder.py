@@ -143,7 +143,7 @@ def main(args, rank, world_size):
         evaluator = Evaluator(
             val_data_loader,
             logger,
-            AutoEncoderEvalFunc(autoencoder, rank, use_gpu=False),
+            AutoEncoderEvalFunc(autoencoder, rank, use_gpu=args.gpu),
             device = device if device != "cuda" else rank,
             trigger=get_trigger((1, 'epoch'))
         )
