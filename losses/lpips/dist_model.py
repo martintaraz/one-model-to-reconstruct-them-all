@@ -58,6 +58,8 @@ class DistModel(BaseModel):
         self.gpu_ids = gpu_ids
         self.model_name = '%s [%s]'%(model,net)
         self.device = "cuda" if use_gpu else "cpu"
+        print("dist_model.py")
+        print(self.device)
 
         if(self.model == 'net-lin'): # pretrained net + linear layer
             self.net = networks.PNetLin(pnet_rand=pnet_rand, pnet_tune=pnet_tune, pnet_type=net,
