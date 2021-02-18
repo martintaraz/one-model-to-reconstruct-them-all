@@ -96,6 +96,7 @@ class PNetLin(nn.Module):
 class ScalingLayer(nn.Module):
     def __init__(self, device):
         super(ScalingLayer, self).__init__()
+        print(device)
         self.register_buffer('shift', torch.Tensor([-.030,-.088,-.188]).to(device)[None,:,None,None])
         self.register_buffer('scale', torch.Tensor([.458,.448,.450]).to(device)[None,:,None,None])
 
