@@ -12,6 +12,8 @@ class AutoEncoderEvalFunc:
 
     def __init__(self, autoencoder: StyleganAutoencoder, device: int, use_perceptual_loss: bool = True, use_gpu: bool=True):
         self.autoencoder = autoencoder
+        print("autoencoder evaluation.py")
+        print(use_gpu)
         self.perceptual_loss = PerceptualLoss(model='net-lin', net='vgg', use_gpu=use_gpu, gpu_ids=[device])
         self.use_perceptual_loss = use_perceptual_loss
 
