@@ -27,7 +27,7 @@ def upsample(in_tens, out_H=64): # assumes scale factor is same for H and W
 
 # Learned perceptual metric
 class PNetLin(nn.Module):
-    def __init__(self, pnet_type='vgg', pnet_rand=False, pnet_tune=False, use_dropout=True, spatial=False, version='0.1', lpips=True):
+    def __init__(self, pnet_type='vgg', pnet_rand=False, pnet_tune=False, use_dropout=True, spatial=False, version='0.1', lpips=True, device = "cpu"):
         super(PNetLin, self).__init__()
 
         self.pnet_type = pnet_type
@@ -36,7 +36,7 @@ class PNetLin(nn.Module):
         self.spatial = spatial
         self.lpips = lpips
         self.version = version
-        self.scaling_layer = ScalingLayer()
+        self.scaling_layer = ScalingLayer(device=device)
 
         if(self.pnet_type in ['vgg','vgg16']):
             net_type = pn.vgg16
@@ -94,10 +94,10 @@ class PNetLin(nn.Module):
             return val
 
 class ScalingLayer(nn.Module):
-    def __init__(self):
+    def __init__(self, device):
         super(ScalingLayer, self).__init__()
-        self.register_buffer('shift', torch.Tensor([-.030,-.088,-.188])[None,:,None,None])
-        self.register_buffer('scale', torch.Tensor([.458,.448,.450])[None,:,None,None])
+        self.register_buffer('shift', torch.Tensor([-.030,-.088,-.188], device = device)[None,:,None,None])
+        self.register_buffer('scale', torch.Tensor([.458,.448,.450], device = device)[None,:,None,None])
 
     def forward(self, inp):
         return (inp - self.shift) / self.scale

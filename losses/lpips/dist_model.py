@@ -57,10 +57,11 @@ class DistModel(BaseModel):
         self.spatial = spatial
         self.gpu_ids = gpu_ids
         self.model_name = '%s [%s]'%(model,net)
+        self.device = "cuda" if use_gpu else "cpu"
 
         if(self.model == 'net-lin'): # pretrained net + linear layer
             self.net = networks.PNetLin(pnet_rand=pnet_rand, pnet_tune=pnet_tune, pnet_type=net,
-                use_dropout=True, spatial=spatial, version=version, lpips=True)
+                use_dropout=True, spatial=spatial, version=version, lpips=True, device=self.device)
             kw = {}
             if not use_gpu:
                 kw['map_location'] = 'cpu'
@@ -73,7 +74,7 @@ class DistModel(BaseModel):
                 self.net.load_state_dict(torch.load(model_path, **kw), strict=False)
 
         elif(self.model=='net'): # pretrained network
-            self.net = networks.PNetLin(pnet_rand=pnet_rand, pnet_type=net, lpips=False)
+            self.net = networks.PNetLin(pnet_rand=pnet_rand, pnet_type=net, lpips=False, device=self.device)
         elif(self.model in ['L2','l2']):
             self.net = networks.L2(use_gpu=use_gpu,colorspace=colorspace) # not really a network, only for testing
             self.model_name = 'L2'
