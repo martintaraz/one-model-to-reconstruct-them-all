@@ -31,7 +31,6 @@ def main(args):
         image = {k: v.to(args.device) for k, v in image.items()}
         reconstructed = Image.fromarray(make_image(autoencoder(image['input_image'])[0].squeeze(0)))
         # rescale the image to the original dimensions
-        reconstructed = reconstructed.resize((1920,1080))
         output_name = Path(args.output_dir) / f"reconstructed_{idx}_stylegan_{config['stylegan_variant']}_{'w_only' if config['w_only'] else 'w_plus'}.png"
         reconstructed.save(output_name)
 
