@@ -4,24 +4,18 @@
 
 2. `pip install gdown`
 
-3. `gdown --id 1QlXFPIOFzsJyjZ1AtfpnVhqW4Z0r8GLZ`
-
-4. `mkdir dataset`
+3. `gdown --id 1QlXFPIOFzsJyjZ1AtfpnVhqW4Z0r8GLZ` to load the styleGAN weights
    
-5. place your *clean* images = frames from the video into the `dataset` folder
+4. place your *clean* images = frames from the video into the `dataset` folder
 
-6. `python utils/folder_to_json.py dataset`
+5. `python utils/folder_to_json.py dataset`
 
-7. `mkdir dataset2`
+6. place your *masked* images into the `dataset2` folder
 
-8. place your ugly images into the `dataset2` folder
+7. run the training using `python train_code_finder.py configs/autoencoder.yaml /models/stylegan1/ffhq.model --images /data/train.json  -s 1 --neural-rendering`
 
-9. run the training using `python train_code_finder.py configs/autoencoder.yaml /models/stylegan1/ffhq.model --images /data/train.json  -s 1 --neural_rendering`
 
-# diff against the original repo
-
-remove the support for StyleGAN2 to re allow training without gpu
-
+all below is the original code
 
 # One Model to Reconstruct them All
 
